@@ -1,10 +1,11 @@
 use cs3380;
 
 
--- DROP TABLES 
+--DROP TABLES 
 
-DROP TABLE IF EXISTS guest_visit_attractions;
-DROP TABLE IF EXISTS guests_book_listings;
+   DROP TABLE IF EXISTS guest_visit_attractions;
+   DROP TABLE IF EXISTS guest_book_listings;
+
 DROP TABLE IF EXISTS listings_have_amenities;
 DROP TABLE IF EXISTS reviews;
 
@@ -25,13 +26,13 @@ DROP TABLE IF EXISTS criminals;
 
 -- GUESTS
 CREATE TABLE guests (
-    guest_id      INT PRIMARY KEY,
+    guest_id      BIGINT PRIMARY KEY,
     guest_name    NVARCHAR(255) NOT NULL
 );
 
 -- HOSTS
 CREATE TABLE hosts (
-    host_id                INT PRIMARY KEY,
+    host_id                BIGINT PRIMARY KEY,
     host_name              NVARCHAR(255) NOT NULL,
     host_identity_verified NVARCHAR(20)  NOT NULL,
     host_since             DATE,
@@ -58,12 +59,12 @@ CREATE TABLE neighbourhoods (
 
 -- LISTINGS (host 1→M listing)
 CREATE TABLE listings (
-    listing_id            INT PRIMARY KEY,
+    listing_id            BIGINT PRIMARY KEY,
     name                  NVARCHAR(255) NOT NULL,
     price                 DECIMAL(10,2),
     property_type         NVARCHAR(100),
     review_scores_value   DECIMAL(5,2),
-    host_id               INT NOT NULL,
+    host_id               BIGINT NOT NULL,
     neighbourhood_id      INT NOT NULL,
 
     FOREIGN KEY (host_id) 
@@ -83,7 +84,7 @@ CREATE TABLE amenities (
 
 -- M–N LISTINGS x AMENITIES
 CREATE TABLE listings_have_amenities (
-    listing_id INT NOT NULL,
+    listing_id BIGINT NOT NULL,
     amenity_id INT NOT NULL,
 
     PRIMARY KEY (listing_id, amenity_id),
@@ -99,9 +100,9 @@ CREATE TABLE listings_have_amenities (
 
 -- REVIEWS
 CREATE TABLE reviews (
-    review_id  INT PRIMARY KEY,
-    listing_id INT NOT NULL,
-    guest_id   INT NOT NULL,
+    review_id  BIGINT PRIMARY KEY,
+    listing_id BIGINT NOT NULL,
+    guest_id   BIGINT NOT NULL,
     comments   NVARCHAR(MAX),
 
     FOREIGN KEY (listing_id)
@@ -126,7 +127,7 @@ CREATE TABLE attractions (
 
 -- M–N: GUEST VISITS ATTRACTIONS
 CREATE TABLE guest_visit_attractions (
-    guest_id      INT NOT NULL,
+    guest_id      BIGINT NOT NULL,
     attraction_id INT NOT NULL,
     visit_date DATE,
 
@@ -170,12 +171,12 @@ CREATE TABLE crimes (
 );
 
 -- M–N: GUESTS BOOK LISTINGS
-CREATE TABLE guests_book_listings (
-    guest_id     INT NOT NULL,
-    listing_id   INT NOT NULL,
+CREATE TABLE guest_book_listings (
+    guest_id     BIGINT NOT NULL,
+    listing_id   BIGINT NOT NULL,
     booking_date DATE,
 
-    PRIMARY KEY (guest_id, listing_id),
+    PRIMARY KEY (guest_id, listing_id, booking_date),
 
     FOREIGN KEY (guest_id)
         REFERENCES guests(guest_id)
