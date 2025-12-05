@@ -58,7 +58,7 @@ public class TorontoDatabase {
         }
     }
 
-    // Helper method to get neighbourhood ID by name
+    // helper method to get neighbourhood ID by neighbourhood name
     private int getNeighbourhoodIdByName(String neighbourhoodName) throws SQLException {
         String sql = "SELECT neighbourhood_id FROM neighbourhoods WHERE neighbourhood_name = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -72,7 +72,7 @@ public class TorontoDatabase {
         return -1; // Return -1 if not found
     }
 
-    // 1) Crimes in a specific neighbourhood (by ID) - ORIGINAL METHOD
+    // 1) Crimes in a specific neighbourhood (by ID) 
     public void showCrimesInNeighbourhood(int neighbourhoodId) {
         String sql = """
                 SELECT c.*
@@ -103,7 +103,7 @@ public class TorontoDatabase {
         }
     }
 
-    // OVERLOADED VERSION: Crimes in a specific neighbourhood (by Name)
+    //Crimes in a specific neighbourhood (by name), then get the id and then run the actual query
     public void showCrimesInNeighbourhood(String neighbourhoodName) {
         try {
             int neighbourhoodId = getNeighbourhoodIdByName(neighbourhoodName);
@@ -117,7 +117,7 @@ public class TorontoDatabase {
         }
     }
 
-    // NEW METHOD: Browse local listings in a neighbourhood (for DatabaseInterface option 2)
+    // browse local listings in a neighbourhood
     public void browseLocalListings(String neighbourhoodName) {
         String sql = """
                 SELECT l.listing_id, l.name, l.price, l.property_type, 
@@ -156,7 +156,7 @@ public class TorontoDatabase {
         }
     }
 
-    // 2) Amenities for a specific listing (by ID) - Renamed to match DatabaseInterface
+    // 2) Amenities for a specific listing (by ID)
     public void getListingAmenities(int listingId) {
         String sql = """
                 SELECT a.amenity_name
@@ -182,10 +182,6 @@ public class TorontoDatabase {
         }
     }
 
-    // Keep the original method name for backward compatibility
-    public void amenitiesForListing(int listingId) {
-        getListingAmenities(listingId);
-    }
 
     // 3) Rank listings by price inside each neighbourhood - Renamed to match DatabaseInterface
     public void rankListingsByPrice() {
@@ -399,12 +395,12 @@ public class TorontoDatabase {
         getPoliceStationCoverage();
     }
 
-    // 8) Guests who stayed AND visited attractions - Renamed to match DatabaseInterface
+    // 8) Guests who stayed AND visited attractions 
     public void trackGuestAttractionActivity() {
         String sql = """
-                SELECT DISTINCT g.guest_id, g.guest_name
+                SELECT DISTINCT TOP 200 g.guest_id, g.guest_name
                 FROM guests g
-                JOIN guests_book_listings gb ON g.guest_id = gb.guest_id
+                JOIN guest_book_listings gb ON g.guest_id = gb.guest_id
                 WHERE EXISTS (
                     SELECT 1 
                     FROM guest_visit_attractions ga
@@ -429,10 +425,6 @@ public class TorontoDatabase {
         }
     }
 
-    // Keep original method name for backward compatibility
-    public void activeTourists() {
-        trackGuestAttractionActivity();
-    }
 
     // 9) Crime rate vs number of listings + avg price per neighbourhood - Renamed to match DatabaseInterface
     public void analyzeCrimeVsTourism() {
@@ -466,11 +458,6 @@ public class TorontoDatabase {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    // Keep original method name for backward compatibility
-    public void crimeVsTourismAnalysis() {
-        analyzeCrimeVsTourism();
     }
 
 // Helper function to display all attractions
@@ -741,7 +728,7 @@ public void showAttractionsWithSafetySummary() {
         }
     }
 
-    // 11) Attraction count vs average listing price - Renamed to match DatabaseInterface
+    // 11) Attraction count vs average listing price 
     public void analyzeAttractionImpactOnPrices() {
         String sql = """
                 SELECT n.neighbourhood_id,
@@ -751,7 +738,8 @@ public void showAttractionsWithSafetySummary() {
                 FROM neighbourhoods n
                 LEFT JOIN attractions a ON n.neighbourhood_id = a.neighbourhood_id
                 LEFT JOIN listings l ON n.neighbourhood_id = l.neighbourhood_id
-                GROUP BY n.neighbourhood_id, n.neighbourhood_name;
+                GROUP BY n.neighbourhood_id, n.neighbourhood_name
+                ORDER BY num_attractions DESC;
                 """;
 
         try (PreparedStatement statement = connection.prepareStatement(sql);
@@ -820,16 +808,16 @@ public void showAttractionsWithSafetySummary() {
         generateAreaSafetyProfiles();
     }
 
-    // 14) Amenities vs bookings per listing - Renamed to match DatabaseInterface
+    // 14) Amenities vs bookings per listing
     public void analyzeAmenityPopularity() {
         String sql = """
-                SELECT l.listing_id,
+                SELECT TOP 150 l.listing_id,
                        l.name,
                        COUNT(DISTINCT la.amenity_id) AS num_amenities,
                        COUNT(DISTINCT gb.booking_date) AS num_bookings
                 FROM listings l
                 LEFT JOIN listings_have_amenities la ON l.listing_id = la.listing_id
-                LEFT JOIN guests_book_listings gb ON l.listing_id = gb.listing_id
+                LEFT JOIN guest_book_listings gb ON l.listing_id = gb.listing_id
                 GROUP BY l.listing_id, l.name
                 ORDER BY num_bookings DESC;
                 """;
@@ -837,7 +825,7 @@ public void showAttractionsWithSafetySummary() {
         try (PreparedStatement statement = connection.prepareStatement(sql);
              ResultSet resultSet = statement.executeQuery()) {
             
-            System.out.println("Amenity Popularity vs Booking Frequency:");
+            System.out.println("Amenities impact on Booking Frequency:");
             System.out.printf("%-12s %-30s %-15s %-12s%n", 
                 "Listing ID", "Name", "Amenities", "Bookings");
             System.out.println("-----------------------------------------------------------------");
@@ -854,15 +842,10 @@ public void showAttractionsWithSafetySummary() {
         }
     }
 
-    // Keep original method name for backward compatibility
-    public void amenitiesVsBookings() {
-        analyzeAmenityPopularity();
-    }
-
-    // 15) Amenities vs price - Renamed to match DatabaseInterface
+    // 15) Amenities vs price 
     public void analyzeAmenityPricing() {
         String sql = """
-                SELECT l.listing_id,
+                SELECT TOP 150 l.listing_id,
                        l.name,
                        l.price,
                        COUNT(la.amenity_id) AS num_amenities
@@ -892,19 +875,14 @@ public void showAttractionsWithSafetySummary() {
         }
     }
 
-    // Keep original method name for backward compatibility
-    public void amenitiesVsPrice() {
-        analyzeAmenityPricing();
-    }
-
-    // 16) Hosts who also appear as guests - Renamed to match DatabaseInterface
+    // 16) Hosts who also appear as guests
     public void findHostGuestOverlap() {
         String sql = """
-                SELECT h.host_id,
+                SELECT TOP 150 h.host_id,
                        h.host_name,
                        COUNT(gb.listing_id) AS num_guest_bookings
                 FROM hosts h
-                LEFT JOIN guests_book_listings gb ON h.host_id = gb.guest_id
+                LEFT JOIN guest_book_listings gb ON h.host_id = gb.guest_id
                 GROUP BY h.host_id, h.host_name
                 ORDER BY num_guest_bookings DESC;
                 """;
@@ -913,7 +891,7 @@ public void showAttractionsWithSafetySummary() {
              ResultSet resultSet = statement.executeQuery()) {
             
             System.out.println("Hosts Who Also Appear as Guests:");
-            System.out.printf("%-10s %-30s %-20s%n", 
+            System.out.printf("%-15s %-30s %-20s%n", 
                 "Host ID", "Host Name", "Guest Bookings");
             System.out.println("------------------------------------------------------");
             
@@ -928,20 +906,17 @@ public void showAttractionsWithSafetySummary() {
         }
     }
 
-    // Keep original method name for backward compatibility
-    public void hostsAsGuests() {
-        findHostGuestOverlap();
-    }
-
-    // 17) Reviews vs bookings - Renamed to match DatabaseInterface
+    // 17) Reviews vs bookings
     public void analyzeReviewImpact() {
         String sql = """
-                SELECT l.listing_id,
+                SELECT TOP 150 l.listing_id,
                        l.name,
                        l.review_scores_value,
-                       COUNT(r.review_id) AS num_reviews
+                       COUNT(r.review_id) AS num_reviews,
+                       COUNT(DISTINCT gb.booking_date) AS num_bookings
                 FROM listings l
                 LEFT JOIN reviews r ON l.listing_id = r.listing_id
+                LEFT JOIN guest_book_listings gb ON l.listing_id = gb.listing_id
                 GROUP BY l.listing_id, l.name, l.review_scores_value
                 ORDER BY l.review_scores_value DESC;
                 """;
@@ -951,7 +926,7 @@ public void showAttractionsWithSafetySummary() {
             
             System.out.println("Review Impact Analysis:");
             System.out.printf("%-12s %-30s %-20s %-12s%n", 
-                "Listing ID", "Name", "Review Score", "Num Reviews");
+                "Listing ID", "Name", "Review Score", "Num Reviews", "Num Bookings");
             System.out.println("-----------------------------------------------------------------");
             
             while (resultSet.next()) {
@@ -959,7 +934,8 @@ public void showAttractionsWithSafetySummary() {
                     resultSet.getInt("listing_id"),
                     resultSet.getString("name"),
                     resultSet.getDouble("review_scores_value"),
-                    resultSet.getInt("num_reviews"));
+                    resultSet.getInt("num_reviews"),
+                    resultSet.getInt("num reviews"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -1081,42 +1057,6 @@ public void showAttractionsWithSafetySummary() {
         }
     }
 
-    // Keep original method name for backward compatibility
-    public void mostVisitedAttractions(int limit) {
-        String sql = """
-                SELECT TOP (?) 
-                    a.attraction_name,
-                    n.neighbourhood_name,
-                    COUNT(gva.guest_id) AS total_visits
-                FROM attractions a
-                JOIN neighbourhoods n 
-                    ON a.neighbourhood_id = n.neighbourhood_id
-                LEFT JOIN guest_visit_attractions gva 
-                    ON a.attraction_id = gva.attraction_id
-                GROUP BY a.attraction_id, a.attraction_name, n.neighbourhood_name
-                ORDER BY total_visits DESC;
-                """;
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, limit);
-            
-            try (ResultSet resultSet = statement.executeQuery()) {
-                System.out.println("Top " + limit + " Most Visited Attractions:");
-                System.out.printf("%-40s %-25s %-15s%n", 
-                    "Attraction", "Neighbourhood", "Total Visits");
-                System.out.println("----------------------------------------------------------------------");
-                
-                while (resultSet.next()) {
-                    System.out.printf("%-40s %-25s %-15d%n",
-                        resultSet.getString("attraction_name"),
-                        resultSet.getString("neighbourhood_name"),
-                        resultSet.getInt("total_visits"));
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
 
     // 21) Criminal category analysis
     public void criminalCategoryAnalysis() {
